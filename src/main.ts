@@ -1,1 +1,1 @@
-console.log("The start of a fantastic journey! :)");
+import {CONFIGURATION} from "./config";
