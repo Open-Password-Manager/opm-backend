@@ -1,9 +1,10 @@
-import {Schema, model} from 'mongoose'
+import {Schema, model, Model, Types, Document} from 'mongoose'
 import {generatePassword} from "../Utils/Shared";
 import {CONFIGURATION} from "../config";
+import {Category, categorySchema, ICategory} from "./Category";
 
 
-interface IUser{
+interface IUser extends Document{
     /** Name of user to be displayed */
     displayName: string,
     /** Email address that identifies the user */
@@ -22,20 +23,47 @@ interface IUser{
     picture: string,
     /** Users private categories */
     //TODO: Connect to Category schema
-    categories:[]
+        //@ts-ignore
+    categories: [categorySchema]
 }
 
-const userSchema = new Schema<IUser>({
+interface IUserModel extends Model<IUser>{
+    findByEmail(name: string): Promise<IUser>
+}
+
+const userSchema = new Schema<IUser, IUserModel>({
     displayName: { type: String, required: true},
-    emailAddress: { type: String, required: true},
+    emailAddress: { type: String, required: true, unique: true},
     phoneNumber: { type: String, required: false},
     password: { type: String, required: true, default: generatePassword(CONFIGURATION.USER.PASSWORD_MIN_LENGTH)},
     updatedAt: { type: Date, required: true, default: Date.now()},
     createdAt: { type: Date, required: true, default: Date.now()},
     enabled: { type: Boolean, required: true, default: true},
     picture: { type: String, required: false, default: null},
-    categories: { type: [], required: true, default: []}
+    // @ts-ignore
+    categories: { type: [categorySchema], required: true, default: []}
 });
 
-export const User = model<IUser>('User', userSchema);
+
+
+//#region Custom statics
+
+/**
+ * Fetches user by email address
+ *
+ * @param name E-Mail address of user to be fetched
+ * @returns User object
+ */
+async function findByEmail(address: string) {
+    return User.findOne({emailAddress: new RegExp(address, 'i')});
+}
+userSchema.static('findByEmail', findByEmail);
+
+
+
+//#endregion
+
+
+
+export const User = model<IUser, IUserModel>('User', userSchema);
 

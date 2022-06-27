@@ -36,7 +36,7 @@ export interface Configuration{
         AUTH_DATABASE: string,
         /** Database for opassman data */
         DATA_DATABASE: string,
-        /** Name of replica set to use (mandatory for transactions) */
+        /** Name of replica set to use (mandatory for transaction) */
         REPLICA_SET: string
     },
     /** API configuration */

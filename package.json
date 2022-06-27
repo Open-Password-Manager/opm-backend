@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "lint": "eslint src/ --fix",
-    "dev": "npx ts-node src/main.ts"
+    "dev": "npx ts-node src/main.ts",
+    "play": "npx ts-node src/Testground.ts"
   },
   "repository": {
     "type": "git",
