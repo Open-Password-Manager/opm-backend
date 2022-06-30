@@ -12,7 +12,7 @@ export const CONFIGURATION: Configuration = {
     },
     API:{
         LISTEN_ADDRESS: "0.0.0.0",
-        PORT: 4000
+        PORT: 4000,
     },
     USER:{
         PASSWORD_MIN_LENGTH: 12

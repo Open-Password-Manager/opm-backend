@@ -1,6 +1,7 @@
 import {Schema, model} from 'mongoose'
 import {CONFIGURATION} from "../config";
 import {entrySchema} from "./Entry";
+import * as mongoose from "mongoose";
 
 
 export interface ICategory{
@@ -11,7 +12,7 @@ export interface ICategory{
     entries: [entrySchema]
     /** Subcategories */
     //@ts-ignore
-    categories: [categorySchema]
+    categories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }]
    
 }
 
