@@ -2,8 +2,8 @@ import {Schema, model, Model, Types, Document, ClientSession} from 'mongoose'
 import {generatePassword} from "../Utils/Shared";
 import {CONFIGURATION} from "../config";
 import {Category, categorySchema, ICategory} from "./Category";
-import * as argon2 from "argon2";
 import * as mongoose from "mongoose";
+import * as bcrypt from "bcrypt";
 
 interface IUser extends Document{
     /** Name of user to be displayed */
@@ -26,18 +26,18 @@ interface IUser extends Document{
     categories: [mongoose.Schema.Types.ObjectId]
 }
 
+// @ts-ignore
 interface IUserModel extends Model<IUser>{
     /** Fetches user by its email address */
     findByEmail(session: ClientSession, name: string): Promise<IUser>,
-    createIt(session: ClientSession, displayName: string, emailAddress: string, password: string, phoneNumber: string, profilePicture?: string): Promise<IUser>
-    addNewCategory(session: ClientSession, userId: mongoose.Schema.Types.ObjectId, name: String): Promise<ICategory>
+    addNewCategory(session: ClientSession, userId: mongoose.Schema.Types.ObjectId, category: {name: String}): Promise<ICategory>
 }
 
 const userSchema = new Schema<IUser, IUserModel>({
     displayName: { type: String, required: true},
     emailAddress: { type: String, required: true, unique: true},
     phoneNumber: { type: String, required: false},
-    password: { type: String, required: true, default: generatePassword(CONFIGURATION.USER.PASSWORD_MIN_LENGTH)},
+    password: { type: String, required: true},
     updatedAt: { type: Date, required: true, default: Date.now()},
     createdAt: { type: Date, required: true, default: Date.now()},
     enabled: { type: Boolean, required: true, default: true},
@@ -62,51 +62,22 @@ userSchema.static('findByEmail', findByEmail);
 
 
 /**
- * Creates a new user
+ * Creates and adds a new category to a specific user
  * @param session Associated session
- * @param displayName
- * @param emailAddress
- * @param password
- * @param phoneNumber
- * @param profilePicture
-*/
-async function createIt(session: ClientSession, displayName: string, emailAddress: string, password: string, phoneNumber: string, profilePicture?: string){
+ * @param userId Unique identifier of user the new category should be added to
+ * @param category Data of new category to be created
+ */
+async function addNewCategory(session: ClientSession, userId: mongoose.Schema.Types.ObjectId, category: {name: string}){
     try{
-        const hashedPassword = await argon2.hash(password);
-        const newUser = await User.create([{
-            displayName,
-            emailAddress,
-            phoneNumber,
-            password
-        }], {session})
-        return newUser[0]
-    }catch(err: unknown){
-        console.log(err);
-        throw new Error("Failed to create new user!")
-    }
+        const newCategory = (await Category.create([category], {session}))[0];
 
-
-}
-userSchema.static('createIt', createIt);
-
-async function addNewCategory(session: ClientSession, userId: mongoose.Schema.Types.ObjectId, name: string){
-    try{
-
-        const newCategory = await Category.create([{
-            name
-        }], {session});
-
-        const newCat = newCategory[0]
-
-        console.time("Update")
-        const explain = await User.findOneAndUpdate(
+        await User.findOneAndUpdate(
             {_id: userId},
-            {$push:{categories: newCat._id}},
+            {$push:{categories: newCategory._id}},
             {session: session}
         )
-        console.timeEnd("Update")
 
-        return newCat;
+        return newCategory;
 
     }catch(err: unknown){
         console.log(err);
@@ -114,6 +85,16 @@ async function addNewCategory(session: ClientSession, userId: mongoose.Schema.Ty
     }
 }
 userSchema.static('addNewCategory', addNewCategory);
+
+
+
+userSchema.pre("save", function(next){
+
+    // @ts-ignore
+    if(!this.$isNew)
+        this.updatedAt = new Date(Date.now());
+    next();
+})
 
 //#endregion
 

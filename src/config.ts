@@ -2,7 +2,7 @@
 export const CONFIGURATION: Configuration = {
     //MongoDB
     DATABASE:{
-        HOST: "135.181.118.247",
+        HOST: "localhost",
         PORT: 27017,
         USERNAME: "admin",
         PASSWORD: "6krbJJ4VRQJe7iKan",
@@ -16,6 +16,9 @@ export const CONFIGURATION: Configuration = {
     },
     USER:{
         PASSWORD_MIN_LENGTH: 12
+    },
+    SECURITY:{
+        SALT_ROUNDS: 12
     }
 }
 
@@ -50,5 +53,9 @@ export interface Configuration{
     USER:{
         /** Minimal length of user password */
         PASSWORD_MIN_LENGTH: number
+    },
+    SECURITY:{
+        /** Number of salt generation rounds */
+        SALT_ROUNDS: number
     }
 }
